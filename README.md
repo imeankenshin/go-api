@@ -1,1 +1,1 @@
-# Go Diary
+# Go API Server
