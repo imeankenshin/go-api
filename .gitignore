@@ -1,0 +1,17 @@
+# .idea
+/shelf/
+/workspace.xml
+
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# Database
+/db_data
+
+# build
+*.log
+/tmp
+
+# Envfiles
+.env
