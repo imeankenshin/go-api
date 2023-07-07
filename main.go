@@ -1,6 +1,8 @@
 package main
 
 import (
+	"awesomeProject/models"
+	"awesomeProject/util"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,19 +15,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type Todo struct {
-	gorm.Model
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Done        bool   `json:"done"`
-}
-
 func Migration() error {
 	db, err := gorm.Open(sqlite.Open("todos.db"))
 	if err != nil {
 		panic(err.Error())
 	}
-	return db.AutoMigrate(&Todo{})
+	return db.AutoMigrate(&models.Todo{})
 }
 
 func main() {
@@ -40,7 +35,7 @@ func main() {
 		middleware.Recoverer,
 	)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		var todos []Todo
+		var todos []models.Todo
 
 		db, err := gorm.Open(sqlite.Open("todos.db"))
 		if err != nil {
@@ -51,17 +46,18 @@ func main() {
 		_ = json.NewEncoder(w).Encode(todos)
 	})
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		var body map[string]string
-		err := json.NewDecoder(r.Body).Decode(&body)
+		body, err := util.ReadBody(r.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
+
 		db, err := gorm.Open(sqlite.Open("todos.db"))
 		if err != nil {
 			panic(err.Error())
 		}
-		result := db.Create(&Todo{
+
+		result := db.Create(&models.Todo{
 			Title:       body["title"],
 			Description: body["description"],
 			Done:        false,
@@ -69,6 +65,7 @@ func main() {
 		if result.Error != nil {
 			panic(result.Error.Error())
 		}
+
 		fmt.Fprintf(w, "Success!")
 	})
 
