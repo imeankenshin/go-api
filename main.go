@@ -23,8 +23,8 @@ func Migration() error {
 }
 
 func main() {
-	r := chi.NewRouter()
-	r.Use(
+	mux := chi.NewRouter()
+	mux.Use(
 		// CORS
 		cors.Handler(cors.Options{
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
@@ -33,7 +33,7 @@ func main() {
 		middleware.Logger,
 		middleware.Recoverer,
 	)
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		var todos []models.Todo
 
 		db, err := gorm.Open(sqlite.Open("todos.db"))
@@ -44,7 +44,7 @@ func main() {
 
 		util.Encode(w, todos)
 	})
-	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.Post("/", func(w http.ResponseWriter, r *http.Request) {
 		body, err := util.ReadBody(r.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
@@ -69,5 +69,5 @@ func main() {
 	})
 
 	println("Server is working on http://localhost:4000")
-	log.Fatal(http.ListenAndServe(":4000", r))
+	log.Fatal(http.ListenAndServe(":4000", mux))
 }
