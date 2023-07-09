@@ -3,7 +3,6 @@ package main
 import (
 	"awesomeProject/models"
 	"awesomeProject/util"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -42,8 +41,8 @@ func main() {
 			panic(err.Error())
 		}
 		db.Find(&todos)
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		_ = json.NewEncoder(w).Encode(todos)
+
+		util.Encode(w, todos)
 	})
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 		body, err := util.ReadBody(r.Body)
