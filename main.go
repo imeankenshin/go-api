@@ -2,7 +2,7 @@ package main
 
 import (
 	"awesomeProject/models"
-	"awesomeProject/util"
+	"awesomeProject/pkg"
 	"fmt"
 	"log"
 	"net/http"
@@ -42,10 +42,10 @@ func main() {
 		}
 		db.Find(&todos)
 
-		util.Encode(w, todos)
+		pkg.Encode(w, todos)
 	})
 	mux.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		body, err := util.ReadBody(r.Body)
+		body, err := pkg.ReadBody(r.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
@@ -67,7 +67,23 @@ func main() {
 
 		fmt.Fprintf(w, "Success!")
 	})
+	mux.Get("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
+		taskID := chi.URLParam(r, "taskID")
+		var todo models.Todo
 
-	println("Server is working on http://localhost:4000")
-	log.Fatal(http.ListenAndServe(":4000", mux))
+		db, err := gorm.Open(sqlite.Open("todos.db"))
+		if err != nil {
+			panic(err.Error())
+		}
+		res := db.First(&todo, taskID)
+		if res.Error != nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		pkg.Encode(w, todo)
+	})
+
+	fmt.Printf("Server is working on http://localhost:3100\n")
+	log.Fatal(http.ListenAndServe(":3100", mux))
 }
