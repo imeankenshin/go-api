@@ -83,6 +83,21 @@ func main() {
 
 		pkg.Encode(w, todo)
 	})
+	mux.Delete("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
+		taskID := chi.URLParam(r, "taskID")
+		var todo models.Todo
+		db, err := gorm.Open(sqlite.Open("todos.db"))
+		if err != nil {
+			panic(err.Error())
+		}
+		res := db.Delete(&todo, taskID)
+		if res.Error != nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		pkg.Encode(w, todo)
+	})
 
 	fmt.Printf("Server is working on http://localhost:3100\n")
 	log.Fatal(http.ListenAndServe(":3100", mux))
