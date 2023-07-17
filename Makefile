@@ -1,11 +1,8 @@
-up:
-	docker compose up
-
-upd:
-	docker compose up -d
-
 build:
-	go build -o ./tmp/main .
+	go build -o ./bin/serve .
 
 run:
 	air -c ./.air.toml
+
+sql:
+	sqlite3 todos.db
