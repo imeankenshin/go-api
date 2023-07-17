@@ -33,70 +33,77 @@ func main() {
 		middleware.Logger,
 		middleware.Recoverer,
 	)
-	mux.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		var todos []models.Todo
 
-		db, err := gorm.Open(sqlite.Open("todos.db"))
-		if err != nil {
-			panic(err.Error())
-		}
-		db.Find(&todos)
+	mux.Route("/task", func(mux chi.Router) {
+		// List
+		mux.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			var todos []models.Todo
 
-		pkg.Encode(w, todos)
-	})
-	mux.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		body, err := pkg.ReadBody(r.Body)
-		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
+			db, err := gorm.Open(sqlite.Open("todos.db"))
+			if err != nil {
+				panic(err.Error())
+			}
+			db.Find(&todos)
 
-		db, err := gorm.Open(sqlite.Open("todos.db"))
-		if err != nil {
-			panic(err.Error())
-		}
-
-		result := db.Create(&models.Todo{
-			Title:       body["title"],
-			Description: body["description"],
-			Done:        false,
+			pkg.Encode(w, todos)
 		})
-		if result.Error != nil {
-			panic(result.Error.Error())
-		}
+		// New
+		mux.Post("/", func(w http.ResponseWriter, r *http.Request) {
+			body, err := pkg.ReadBody(r.Body)
+			if err != nil {
+				http.Error(w, "Bad request", http.StatusBadRequest)
+				return
+			}
 
-		fmt.Fprintf(w, "Success!")
-	})
-	mux.Get("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
-		taskID := chi.URLParam(r, "taskID")
-		var todo models.Todo
+			db, err := gorm.Open(sqlite.Open("todos.db"))
+			if err != nil {
+				panic(err.Error())
+			}
 
-		db, err := gorm.Open(sqlite.Open("todos.db"))
-		if err != nil {
-			panic(err.Error())
-		}
-		res := db.First(&todo, taskID)
-		if res.Error != nil {
-			http.NotFound(w, r)
-			return
-		}
+			result := db.Create(&models.Todo{
+				Title:       body["title"],
+				Description: body["description"],
+				Done:        false,
+			})
+			if result.Error != nil {
+				panic(result.Error.Error())
+			}
 
-		pkg.Encode(w, todo)
-	})
-	mux.Delete("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
-		taskID := chi.URLParam(r, "taskID")
-		var todo models.Todo
-		db, err := gorm.Open(sqlite.Open("todos.db"))
-		if err != nil {
-			panic(err.Error())
-		}
-		res := db.Delete(&todo, taskID)
-		if res.Error != nil {
-			http.NotFound(w, r)
-			return
-		}
+			fmt.Fprintf(w, "Success!")
+		})
+		// Get
+		mux.Get("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
+			taskID := chi.URLParam(r, "taskID")
+			var todo models.Todo
 
-		pkg.Encode(w, todo)
+			db, err := gorm.Open(sqlite.Open("todos.db"))
+			if err != nil {
+				panic(err.Error())
+			}
+			res := db.First(&todo, taskID)
+			if res.Error != nil {
+				http.NotFound(w, r)
+				return
+			}
+
+			pkg.Encode(w, todo)
+		})
+		// Delete
+		mux.Delete("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
+			taskID := chi.URLParam(r, "taskID")
+			var todo models.Todo
+			db, err := gorm.Open(sqlite.Open("todos.db"))
+			if err != nil {
+				panic(err.Error())
+			}
+			res := db.Delete(&todo, taskID)
+			if res.Error != nil {
+				http.NotFound(w, r)
+				return
+			}
+
+			pkg.Encode(w, todo)
+		})
 	})
 
 	fmt.Printf("Server is working on http://localhost:3100\n")
