@@ -23,8 +23,8 @@ func Migration() error {
 }
 
 func main() {
-	mux := chi.NewRouter()
-	mux.Use(
+	r := chi.NewRouter()
+	r.Use(
 		// CORS
 		cors.Handler(cors.Options{
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
@@ -34,9 +34,9 @@ func main() {
 		middleware.Recoverer,
 	)
 
-	mux.Route("/task", func(mux chi.Router) {
+	r.Route("/task", func(r chi.Router) {
 		// List
-		mux.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			var todos []models.Todo
 
 			db, err := gorm.Open(sqlite.Open("todos.db"))
@@ -48,7 +48,7 @@ func main() {
 			pkg.Encode(w, todos)
 		})
 		// New
-		mux.Post("/", func(w http.ResponseWriter, r *http.Request) {
+		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			body, err := pkg.ReadBody(r.Body)
 			if err != nil {
 				http.Error(w, "Bad request", http.StatusBadRequest)
@@ -72,7 +72,7 @@ func main() {
 			fmt.Fprintf(w, "Success!")
 		})
 		// Get
-		mux.Get("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
 			taskID := chi.URLParam(r, "taskID")
 			var todo models.Todo
 
@@ -89,7 +89,7 @@ func main() {
 			pkg.Encode(w, todo)
 		})
 		// Delete
-		mux.Delete("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
+		r.Delete("/{taskID}", func(w http.ResponseWriter, r *http.Request) {
 			taskID := chi.URLParam(r, "taskID")
 			var todo models.Todo
 			db, err := gorm.Open(sqlite.Open("todos.db"))
@@ -107,5 +107,5 @@ func main() {
 	})
 
 	fmt.Printf("Server is working on http://localhost:3100\n")
-	log.Fatal(http.ListenAndServe(":3100", mux))
+	log.Fatal(http.ListenAndServe(":3100", r))
 }
